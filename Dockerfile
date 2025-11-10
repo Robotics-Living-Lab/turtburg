@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     git \
     build-essential \
-    python3-colcon-common-extensions \
+    python3-pip \
     python3-argcomplete \
     libboost-system-dev \
     libudev-dev \
@@ -25,6 +25,10 @@ RUN apt-get update && apt-get install -y \
 # Set locale
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Install colcon
+RUN pip3 install -U colcon-common-extensions
+
 
 # Setup ROS2 repositories
 RUN curl -sSL http://repo.ros2.org/repos.key | apt-key add - && \
