@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libboost-system-dev \
     libudev-dev \
     udev \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -61,7 +62,25 @@ RUN rm -rf turtlebot3/turtlebot3_cartographer turtlebot3/turtlebot3_navigation2
 
 # Build the workspace
 WORKDIR /turtlebot3_ws
-RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && colcon build --symlink-install --parallel-workers 1"
+ENV MAKEFLAGS="-j1" \
+	CMAKE_BUILD_PARALLEL_LEVEL=1 \
+	COLCON_TRACE=1 \
+	COLCON_LOG_LEVEL=info
+# Build (So it's inside the image, but dang is that a problem lol)
+RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && \
+	colcon build \
+		--symlink-install \
+		--parallel-workers 1 \
+		--executor sequential \
+		--cmake-args -DCMAKE_BUILD_TYPE=MinSizeRel \
+"
+
+RUN echo 'export LDS_MODEL=LDS-02' >> ~/.bashrc
+#RUN echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
+RUN echo "source /turtlebot3_ws/install/setup.bash" >> ~/.bashrc
+
+RUN apt-get update && \
+	apt-get install -y ros-humble-joy ros-humble-teleop-twist-joy
 
 # Setup entrypoint
 COPY entrypoint.sh /entrypoint.sh
